@@ -81,6 +81,7 @@ const TOOLS: Tool[] = [
             "gemini-2.5-flash-image",
             "gemini-3-pro-image-preview",
           ],
+          description: "nano-banana-2 (gemini-3.1-flash-image-preview) — fast, supports 2K/4K. nano-banana (gemini-2.5-flash-image). nano-banana-pro (gemini-3-pro-image-preview) — highest quality.",
         },
         prompt: { type: "string", description: "Editing instruction" },
         image_urls: {
@@ -91,10 +92,12 @@ const TOOLS: Tool[] = [
         aspect_ratio: {
           type: "string",
           enum: ["auto","1:1","2:3","3:2","3:4","4:3","4:5","5:4","9:16","16:9","21:9"],
+          description: "Output aspect ratio (default: auto)",
         },
         image_size: {
           type: "string",
           enum: ["1K", "2K", "4K"],
+          description: "Output resolution — supported by nano-banana-2 and nano-banana-pro",
         },
       },
       required: ["model", "prompt", "image_urls"],
@@ -202,7 +205,16 @@ async function handleTool(
     case "get_image_task":
       return imageClient.getImageTask(input.task_id as string);
 
-    case "generate_video":
+    case "generate_video": {
+      const genType = input.generation_type as string | undefined;
+      if (
+        (genType === "FIRST&LAST" || genType === "REFERENCE") &&
+        (!input.image_urls || (input.image_urls as string[]).length === 0)
+      ) {
+        throw new Error(
+          `generate_video: image_urls is required when generation_type is "${genType}"`
+        );
+      }
       return videoClient.generateVideo({
         model: input.model as any,
         prompt: input.prompt as string,
@@ -211,6 +223,7 @@ async function handleTool(
         quality: input.quality as any,
         image_urls: input.image_urls as string[] | undefined,
       });
+    }
 
     case "get_video_task":
       return videoClient.getVideoTask(input.task_id as string);
