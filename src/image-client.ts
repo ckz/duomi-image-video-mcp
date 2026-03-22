@@ -1,3 +1,8 @@
+/**
+ * DuomiAPI image client (nano-banana)
+ * Handles text-to-image, image-to-image, and task polling.
+ * DuomiAPIError is exported and shared with video-client.ts.
+ */
 import axios, { AxiosInstance } from "axios";
 
 const BASE_URL = "https://duomiapi.com";
@@ -77,15 +82,20 @@ export class DuomiImageClient {
 
   async getImageTask(taskId: string): Promise<ImageTaskResult> {
     const res = await this.http.get(`/api/gemini/nano-banana/${taskId}`);
-    if (res.data.code === 400) {
+    if (res.data.code !== 200) {
       return { task_id: taskId, state: "error", message: res.data.msg };
     }
-    const d = res.data.data;
+    const d = res.data.data as {
+      task_id: string;
+      state: ImageTaskState;
+      msg?: string;
+      data?: { images: Array<{ url: string; file_name: string }> };
+    };
     return {
       task_id: d.task_id,
       state: d.state,
       images: d.data?.images,
-      message: d.msg || undefined,
+      message: d.msg ?? undefined,
     };
   }
 
