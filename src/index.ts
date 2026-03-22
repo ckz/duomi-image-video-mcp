@@ -56,12 +56,12 @@ const TOOLS: Tool[] = [
         aspect_ratio: {
           type: "string",
           enum: ["auto","1:1","2:3","3:2","3:4","4:3","4:5","5:4","9:16","16:9","21:9"],
-          description: "Output aspect ratio (default: auto)",
+          description: "Output aspect ratio (default: 9:16)",
         },
         image_size: {
           type: "string",
           enum: ["1K", "2K", "4K"],
-          description: "Output resolution — supported by nano-banana-2 and nano-banana-pro",
+          description: "Output resolution — supported by nano-banana-2 and nano-banana-pro (default: 1K)",
         },
       },
       required: ["model", "prompt"],
@@ -92,12 +92,12 @@ const TOOLS: Tool[] = [
         aspect_ratio: {
           type: "string",
           enum: ["auto","1:1","2:3","3:2","3:4","4:3","4:5","5:4","9:16","16:9","21:9"],
-          description: "Output aspect ratio (default: auto)",
+          description: "Output aspect ratio (default: 9:16)",
         },
         image_size: {
           type: "string",
           enum: ["1K", "2K", "4K"],
-          description: "Output resolution — supported by nano-banana-2 and nano-banana-pro",
+          description: "Output resolution — supported by nano-banana-2 and nano-banana-pro (default: 1K)",
         },
       },
       required: ["model", "prompt", "image_urls"],
@@ -189,8 +189,8 @@ async function handleTool(
       return imageClient.generateImage({
         model: input.model as any,
         prompt: input.prompt as string,
-        aspect_ratio: input.aspect_ratio as any,
-        image_size: input.image_size as any,
+        aspect_ratio: (input.aspect_ratio as any) ?? "9:16",
+        image_size: (input.image_size as any) ?? "1K",
       });
 
     case "edit_image":
@@ -198,8 +198,8 @@ async function handleTool(
         model: input.model as any,
         prompt: input.prompt as string,
         image_urls: input.image_urls as string[],
-        aspect_ratio: input.aspect_ratio as any,
-        image_size: input.image_size as any,
+        aspect_ratio: (input.aspect_ratio as any) ?? "9:16",
+        image_size: (input.image_size as any) ?? "1K",
       });
 
     case "get_image_task":
@@ -241,7 +241,7 @@ async function main() {
   const videoClient = new DuomiVideoClient(apiKey);
 
   const server = new Server(
-    { name: "duomi-image-video-mcp", version: "0.1.0" },
+    { name: "duomi-image-video-mcp", version: "0.1.1" },
     { capabilities: { tools: {} } }
   );
 

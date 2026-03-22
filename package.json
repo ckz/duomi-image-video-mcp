@@ -1,6 +1,6 @@
 {
   "name": "duomi-image-video-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for DuomiAPI — image generation, image editing, and video generation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,18 +13,30 @@
     "start": "node dist/index.js",
     "prepare": "npm run build"
   },
-  "keywords": ["mcp", "duomi", "image", "video", "ai", "gemini", "veo", "nano-banana"],
+  "keywords": [
+    "mcp",
+    "duomi",
+    "image",
+    "video",
+    "ai",
+    "gemini",
+    "veo",
+    "nano-banana"
+  ],
   "author": "ckz",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ckz/duomi-image-video-mcp"
+    "url": "git+https://github.com/ckz/duomi-image-video-mcp.git"
   },
   "bugs": {
     "url": "https://github.com/ckz/duomi-image-video-mcp/issues"
   },
   "homepage": "https://github.com/ckz/duomi-image-video-mcp#readme",
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "axios": "^1.7.0"
