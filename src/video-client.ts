@@ -52,19 +52,23 @@ export class DuomiVideoClient {
     this.assertOk(res.data);
     // response may use task_id or id depending on API version
     const taskId = res.data.data?.task_id ?? res.data.data?.id ?? res.data.task_id;
+    if (!taskId) {
+      throw new DuomiAPIError(0, "missing task_id", "DuomiAPI error: response missing task_id");
+    }
     return { task_id: taskId };
   }
 
   async getVideoTask(taskId: string): Promise<VideoTaskResult> {
     const res = await this.http.get(`/v1/videos/tasks/${taskId}`);
     const d = res.data;
-    if (!d.state) {
+    if (d.state == null) {
       return { task_id: taskId, state: "error", progress: 0, message: "task not found" };
     }
     return {
       task_id: d.id ?? taskId,
       state: d.state,
       progress: d.progress ?? 0,
+      // VEO task response: { id, state, progress, data: { videos: [...] } }
       videos: d.data?.videos,
       message: d.message ?? undefined,
     };
