@@ -51,8 +51,8 @@ export class DuomiVideoClient {
     const body = { ...req, duration: 8 };
     const res = await this.http.post("/v1/videos/generations", body);
     this.assertOk(res.data);
-    // response may use task_id or id depending on API version
-    const taskId = res.data.data?.task_id ?? res.data.data?.id ?? res.data.task_id;
+    // video API returns flat { id } — image API returns { data: { task_id } }
+    const taskId = res.data.task_id ?? res.data.id ?? res.data.data?.task_id ?? res.data.data?.id;
     if (!taskId) {
       throw new DuomiAPIError(0, "missing task_id", "DuomiAPI error: response missing task_id");
     }
