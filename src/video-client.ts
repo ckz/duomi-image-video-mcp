@@ -41,6 +41,7 @@ export class DuomiVideoClient {
   constructor(apiKey: string) {
     this.http = axios.create({
       baseURL: BASE_URL,
+      // DuomiAPI uses bare token auth (no "Bearer" prefix) — confirmed working
       headers: { Authorization: apiKey },
     });
   }
