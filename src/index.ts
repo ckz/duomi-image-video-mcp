@@ -63,6 +63,23 @@ const TOOLS: Tool[] = [
           enum: ["1K", "2K", "4K"],
           description: "Output resolution — supported by nano-banana-2 and nano-banana-pro (default: 1K)",
         },
+        output_dir: {
+          type: "string",
+          description: "Directory to save downloaded image (default: current directory)",
+        },
+        base_name: {
+          type: "string",
+          description: "Base filename for downloaded image (without extension)",
+        },
+        auto_download: {
+          type: "boolean",
+          description: "If true, automatically poll and download when task completes (default: false)",
+        },
+        format: {
+          type: "string",
+          enum: ["jpeg", "jpg", "png"],
+          description: "Output format for downloaded image (default: jpeg)",
+        },
       },
       required: ["model", "prompt"],
     },
@@ -98,6 +115,23 @@ const TOOLS: Tool[] = [
           type: "string",
           enum: ["1K", "2K", "4K"],
           description: "Output resolution — supported by nano-banana-2 and nano-banana-pro (default: 1K)",
+        },
+        output_dir: {
+          type: "string",
+          description: "Directory to save downloaded image (default: current directory)",
+        },
+        base_name: {
+          type: "string",
+          description: "Base filename for downloaded image (without extension)",
+        },
+        auto_download: {
+          type: "boolean",
+          description: "If true, automatically poll and download when task completes (default: false)",
+        },
+        format: {
+          type: "string",
+          enum: ["jpeg", "jpg", "png"],
+          description: "Output format for downloaded image (default: jpeg)",
         },
       },
       required: ["model", "prompt", "image_urls"],
@@ -185,22 +219,79 @@ async function handleTool(
   videoClient: DuomiVideoClient
 ): Promise<unknown> {
   switch (name) {
-    case "generate_image":
-      return imageClient.generateImage({
-        model: input.model as any,
-        prompt: input.prompt as string,
-        aspect_ratio: (input.aspect_ratio as any) ?? "9:16",
-        image_size: (input.image_size as any) ?? "1K",
+    case "generate_image": {
+      const model = input.model as any;
+      const prompt = input.prompt as string;
+      const aspect_ratio = (input.aspect_ratio as any) ?? "9:16";
+      const image_size = (input.image_size as any) ?? "1K";
+      const auto_download = input.auto_download as boolean ?? false;
+      const output_dir = input.output_dir as string | undefined;
+      const base_name = input.base_name as string | undefined;
+      const format = (input.format as "jpeg" | "jpg" | "png") ?? "jpeg";
+
+      const result = await imageClient.generateImage({
+        model,
+        prompt,
+        aspect_ratio,
+        image_size,
       });
 
-    case "edit_image":
-      return imageClient.editImage({
-        model: input.model as any,
-        prompt: input.prompt as string,
-        image_urls: input.image_urls as string[],
-        aspect_ratio: (input.aspect_ratio as any) ?? "9:16",
-        image_size: (input.image_size as any) ?? "1K",
+      if (auto_download) {
+        // Poll for completion and download
+        const taskResult = await imageClient.waitForTask(result.task_id);
+        if (taskResult.state === "succeeded" && taskResult.images && taskResult.images.length > 0) {
+          const imageUrl = taskResult.images[0].url;
+          const localPath = await imageClient.downloadImage(imageUrl, {
+            output_dir,
+            base_name: base_name ?? "generated",
+            aspect_ratio,
+            format,
+          });
+          taskResult.local_path = localPath;
+          return taskResult;
+        }
+        return taskResult;
+      }
+      return result;
+    }
+
+    case "edit_image": {
+      const model = input.model as any;
+      const prompt = input.prompt as string;
+      const image_urls = input.image_urls as string[];
+      const aspect_ratio = (input.aspect_ratio as any) ?? "9:16";
+      const image_size = (input.image_size as any) ?? "1K";
+      const auto_download = input.auto_download as boolean ?? false;
+      const output_dir = input.output_dir as string | undefined;
+      const base_name = input.base_name as string | undefined;
+      const format = (input.format as "jpeg" | "jpg" | "png") ?? "jpeg";
+
+      const result = await imageClient.editImage({
+        model,
+        prompt,
+        image_urls,
+        aspect_ratio,
+        image_size,
       });
+
+      if (auto_download) {
+        // Poll for completion and download
+        const taskResult = await imageClient.waitForTask(result.task_id);
+        if (taskResult.state === "succeeded" && taskResult.images && taskResult.images.length > 0) {
+          const imageUrl = taskResult.images[0].url;
+          const localPath = await imageClient.downloadImage(imageUrl, {
+            output_dir,
+            base_name: base_name ?? "edited",
+            aspect_ratio,
+            format,
+          });
+          taskResult.local_path = localPath;
+          return taskResult;
+        }
+        return taskResult;
+      }
+      return result;
+    }
 
     case "get_image_task":
       return imageClient.getImageTask(input.task_id as string);
